@@ -1,0 +1,784 @@
+{
+  "info": {
+    "_postman_id": "d6f074d0-d75c-4f1b-85b3-46f14247f80f",
+    "name": "SafeDoc API - Full Collection",
+    "description": "Полная коллекция методов SafeDoc API (все роуты из app/api/routes + системные FastAPI endpoints docs/openapi). Перед запуском: вызови Auth/Login, токен автоматически сохранится в {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "documentId",
+      "value": "1"
+    },
+    {
+      "key": "requestId",
+      "value": "1"
+    },
+    {
+      "key": "version",
+      "value": "1"
+    },
+    {
+      "key": "publicToken",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Аутентификация и профиль текущего пользователя.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Логин по учетным данным. При 3 неудачных попытках пользователь блокируется на 10 минут."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('token', json.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Профиль текущего авторизованного пользователя."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Управление учетными записями (только superadmin).",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"ivanov\",\n  \"surname\": \"Иванов\",\n  \"name\": \"Иван\",\n  \"middle_name\": \"Иванович\",\n  \"department\": \"IT\",\n  \"position\": \"Developer\",\n  \"email\": \"ivanov@example.com\",\n  \"password\": \"StrongPass123\",\n  \"is_superadmin\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Создание учетной записи пользователя."
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Список всех пользователей."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department\": \"Security\",\n  \"position\": \"Analyst\",\n  \"email\": \"ivanov.sec@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Редактирование полей пользователя и/или смена пароля."
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Удаление пользователя. Последнего superadmin удалить нельзя."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "description": "Операции с файлами, версиями, переименованием и удалением.",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "visibility",
+                  "type": "text",
+                  "value": "by_request",
+                  "description": "read_all | edit_all | by_request"
+                },
+                {
+                  "key": "comment",
+                  "type": "text",
+                  "value": "Первая версия"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents"
+              ]
+            },
+            "description": "Загрузка файла в хранилище (до 300 МБ, docx/pdf/png/jpeg/pptx)."
+          }
+        },
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documents?search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Список документов с учетом доступов и фильтрацией по названию."
+          }
+        },
+        {
+          "name": "Download Document",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "download"
+              ]
+            },
+            "description": "Скачать текущую версию документа."
+          }
+        },
+        {
+          "name": "Upload New Version",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "comment",
+                  "type": "text",
+                  "value": "Новая версия"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/versions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "versions"
+              ]
+            },
+            "description": "Загрузить новую версию документа."
+          }
+        },
+        {
+          "name": "List Versions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/versions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "versions"
+              ]
+            },
+            "description": "Получить историю версий документа."
+          }
+        },
+        {
+          "name": "Rename Document",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "type": "text",
+                  "value": "new_name.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/rename",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "rename"
+              ]
+            },
+            "description": "Переименовать документ."
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}"
+              ]
+            },
+            "description": "Мягкое удаление документа (ставится deleted_at)."
+          }
+        },
+        {
+          "name": "Restore Version",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/restore/{{version}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "restore",
+                "{{version}}"
+              ]
+            },
+            "description": "Восстановить выбранную версию как текущую."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access",
+      "description": "Заявки на доступ и ручное управление ACL.",
+      "item": [
+        {
+          "name": "Create Access Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": {{documentId}},\n  \"requested_role\": \"reader\",\n  \"message\": \"Нужен доступ для проверки\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/access/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "requests"
+              ]
+            },
+            "description": "Создать заявку на доступ к документу."
+          }
+        },
+        {
+          "name": "My Access Requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/access/requests/my",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "requests",
+                "my"
+              ]
+            },
+            "description": "Список моих заявок на доступ."
+          }
+        },
+        {
+          "name": "Inbox Access Requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/access/requests/inbox",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "requests",
+                "inbox"
+              ]
+            },
+            "description": "Входящие pending-заявки (для владельца/manager/superadmin)."
+          }
+        },
+        {
+          "name": "Resolve Access Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"resolution_comment\": \"Доступ одобрен\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/access/requests/{{requestId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "requests",
+                "{{requestId}}",
+                "resolve"
+              ]
+            },
+            "description": "Одобрить или отклонить заявку."
+          }
+        },
+        {
+          "name": "Grant Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": {{documentId}},\n  \"user_id\": {{userId}},\n  \"role\": \"reader\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/access/grant",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "grant"
+              ]
+            },
+            "description": "Выдать пользователю роль доступа к документу."
+          }
+        },
+        {
+          "name": "Revoke Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": {{documentId}},\n  \"user_id\": {{userId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/access/revoke",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "access",
+                "revoke"
+              ]
+            },
+            "description": "Отозвать все роли доступа пользователя к документу."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Links",
+      "description": "Публичные ссылки для просмотра файлов (без логина в систему).",
+      "item": [
+        {
+          "name": "Create Public Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expires_at\": \"2026-12-31T23:59:59Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/links/{{documentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "links",
+                "{{documentId}}"
+              ]
+            },
+            "description": "Сгенерировать токен публичной ссылки для поддерживаемых форматов."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('publicToken', json.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get By Public Link",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/links/public/{{publicToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "links",
+                "public",
+                "{{publicToken}}"
+              ]
+            },
+            "description": "Получить файл по публичной ссылке (inline preview/download)."
+          }
+        },
+        {
+          "name": "Revoke Public Link",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/links/public/{{publicToken}}/revoke",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "links",
+                "public",
+                "{{publicToken}}",
+                "revoke"
+              ]
+            },
+            "description": "Отозвать публичную ссылку по токену."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "description": "Аудит-методы (доступ только superadmin).",
+      "item": [
+        {
+          "name": "Tail Audit",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audit/tail?lines=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit",
+                "tail"
+              ],
+              "query": [
+                {
+                  "key": "lines",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "Получить последние N строк JSONL-лога."
+          }
+        }
+      ]
+    },
+    {
+      "name": "FastAPI System",
+      "description": "Системные endpoints, которые FastAPI поднимает автоматически.",
+      "item": [
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/openapi.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
+            "description": "Спецификация OpenAPI со всеми зарегистрированными маршрутами."
+          }
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "docs"
+              ]
+            },
+            "description": "Swagger UI."
+          }
+        },
+        {
+          "name": "ReDoc",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/redoc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "redoc"
+              ]
+            },
+            "description": "ReDoc документация."
+          }
+        }
+      ]
+    }
+  ]
+}
+
