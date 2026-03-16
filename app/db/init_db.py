@@ -53,6 +53,8 @@ async def seed_defaults(session: AsyncSession) -> None:
         # Backward-compatible repair for previously seeded invalid email.
         admin.email = DEFAULT_ADMIN_EMAIL
 
+    admin.is_superadmin = True
+
     superadmin_role = (await session.execute(select(Role).where(Role.name == RoleName.SUPERADMIN))).scalar_one()
     has_superadmin_role = (
         await session.execute(
@@ -62,5 +64,17 @@ async def seed_defaults(session: AsyncSession) -> None:
     if has_superadmin_role is None:
         session.add(UserRole(user_id=admin.id, role_id=superadmin_role.id, document_id=None))
 
-    await session.commit()
+    # Self-heal old data: only default admin keeps superadmin flag and role.
+    other_superadmins = (
+        await session.execute(select(User).where(User.is_superadmin.is_(True), User.id != admin.id))
+    ).scalars().all()
+    for user in other_superadmins:
+        user.is_superadmin = False
 
+    extra_superadmin_roles = (
+        await session.execute(select(UserRole).where(UserRole.role_id == superadmin_role.id, UserRole.user_id != admin.id))
+    ).scalars().all()
+    for row in extra_superadmin_roles:
+        await session.delete(row)
+
+    await session.commit()

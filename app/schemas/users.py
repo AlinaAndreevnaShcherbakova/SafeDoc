@@ -24,6 +24,7 @@ class UserUpdate(BaseModel):
     position: str | None = None
     email: EmailStr | None = None
     password: str | None = None
+    is_superadmin: bool | None = None
 
 
 class UserRead(UserBase):
