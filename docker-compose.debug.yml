@@ -1,4 +1,20 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:${API_PORT:-8000}}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      api:
+        condition: service_started
+
   api:
     env_file:
       - .env.debug
@@ -54,4 +70,7 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+
+volumes:
+  frontend-node-modules:
 

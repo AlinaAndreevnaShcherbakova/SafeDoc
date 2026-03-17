@@ -15,3 +15,6 @@ coverage*
 logs/
 storage/
 
+frontend/node_modules/
+frontend/dist/
+

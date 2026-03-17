@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     storage_dir: str = "storage"
     logs_dir: str = "logs"
 
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
 
 settings = Settings()
 
