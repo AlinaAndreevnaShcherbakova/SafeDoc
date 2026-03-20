@@ -1,3 +1,4 @@
+import React from "react";
 import Spinner from "react-bootstrap/Spinner";
 
 export default function Loader() {
@@ -9,4 +10,3 @@ export default function Loader() {
     </div>
   );
 }
-
