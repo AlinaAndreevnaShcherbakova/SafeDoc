@@ -19,6 +19,7 @@ from app.services.authz import (
     role_can_write,
 )
 from app.services.storage import storage_service
+from app.services.preview import preview_service
 
 router = APIRouter()
 
@@ -151,6 +152,24 @@ async def download_document(
 
     await audit_service.log_event("document", str(current_user.id), f"download:{doc.id}", "success")
     return Response(content=data, media_type=doc.mime, headers={"Content-Disposition": _build_content_disposition(doc.name)})
+
+
+@router.get("/{document_id}/preview")
+async def preview_document(
+    document_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    doc = await session.get(Document, document_id)
+    if doc is None or doc.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Документ не найден")
+
+    if not await _can_read_document(session, current_user, doc):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа к документу")
+
+    data = await storage_service.download(doc.storage_key)
+    await audit_service.log_event("document", str(current_user.id), f"preview:{doc.id}", "success")
+    return await preview_service.build_preview_response(data=data, mime=doc.mime, filename=doc.name)
 
 
 @router.post("/{document_id}/versions", response_model=VersionRead)

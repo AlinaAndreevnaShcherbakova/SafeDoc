@@ -58,6 +58,14 @@ export function AuthProvider({ children }) {
       user,
       loading,
       isAuthenticated: Boolean(token && user),
+      async refreshMe() {
+        if (!token) {
+          setUser(null);
+          return;
+        }
+        const { data } = await api.get("/auth/me");
+        setUser(data);
+      },
       async login(loginValue, password) {
         const { data } = await api.post("/auth/login", { login: loginValue, password });
         localStorage.setItem(tokenStorageKey, data.access_token);

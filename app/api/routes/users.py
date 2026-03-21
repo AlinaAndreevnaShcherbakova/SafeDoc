@@ -12,6 +12,24 @@ from app.services.audit import audit_service
 router = APIRouter()
 
 
+def _serialize_user(user: User) -> UserRead:
+    role = "superadmin" if user.is_superadmin else "user"
+    return UserRead.model_validate(
+        {
+            "id": user.id,
+            "login": user.login,
+            "surname": user.surname,
+            "name": user.name,
+            "middle_name": user.middle_name,
+            "department": user.department,
+            "position": user.position,
+            "email": user.email,
+            "is_superadmin": user.is_superadmin,
+            "role": role,
+        }
+    )
+
+
 @router.post("", response_model=UserRead)
 async def create_user(
     payload: UserCreate,
@@ -44,7 +62,7 @@ async def create_user(
     await session.commit()
     await session.refresh(user)
     await audit_service.log_event("users", str(user.id), "create", "success")
-    return UserRead.model_validate(user)
+    return _serialize_user(user)
 
 
 @router.get("", response_model=list[UserRead])
@@ -53,7 +71,7 @@ async def list_users(
     _: User = Depends(require_superadmin),
 ) -> list[UserRead]:
     users = (await session.execute(select(User).order_by(User.id))).scalars().all()
-    return [UserRead.model_validate(user) for user in users]
+    return [_serialize_user(user) for user in users]
 
 
 @router.patch("/{user_id}", response_model=UserRead)
@@ -82,7 +100,7 @@ async def update_user(
     await session.commit()
     await session.refresh(user)
     await audit_service.log_event("users", str(user.id), "update", "success")
-    return UserRead.model_validate(user)
+    return _serialize_user(user)
 
 
 @router.delete("/{user_id}")

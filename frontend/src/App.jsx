@@ -8,6 +8,8 @@ import Loader from "./components/Loader";
 import { useAuth } from "./context/AuthContext";
 import DocumentsPage from "./pages/DocumentsPage";
 import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
+import PublicHomePage from "./pages/PublicHomePage";
 import RequestsPage from "./pages/RequestsPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -41,7 +43,15 @@ export default function App() {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return (
+      <Container className="pb-4">
+        <Routes>
+          <Route path="/" element={<PublicHomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Container>
+    );
   }
 
   return (
@@ -49,6 +59,14 @@ export default function App() {
       <AppNavbar isSuperadmin={Boolean(user?.is_superadmin)} onLogout={logout} />
       <Container className="pb-4">
         <Routes>
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/documents"
             element={
@@ -75,7 +93,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/documents" replace />} />
+          <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>
       </Container>
     </>

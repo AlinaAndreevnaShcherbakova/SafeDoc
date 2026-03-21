@@ -76,15 +76,15 @@ docker compose -f docker-compose.yml -f docker-compose.debug.yml --env-file .env
 
 ## Минимальные API для демо
 
-- `POST /auth/login`, `GET /auth/me`
+- `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me`, `POST /auth/change-password`
 - `POST /users`, `GET /users`, `PATCH /users/{user_id}`, `DELETE /users/{user_id}`
-- `POST /documents` (multipart), `GET /documents`, `GET /documents/{id}/download`
+- `POST /documents` (multipart), `GET /documents`, `GET /documents/{id}/preview`, `GET /documents/{id}/download`
 - `POST /documents/{id}/versions`, `GET /documents/{id}/versions`
 - `PATCH /documents/{id}/rename`, `DELETE /documents/{id}`
 - `POST /documents/{id}/restore/{version}`
 - `POST /access/requests`, `GET /access/requests/my`, `GET /access/requests/inbox`
 - `POST /access/requests/{id}/resolve`, `POST /access/grant`, `POST /access/revoke`
-- `POST /links/{document_id}`, `GET /links/public/{token}`, `POST /links/public/{token}/revoke`
+- `POST /links/{document_id}`, `GET /links/{document_id}`, `GET /links/public/{token}`, `POST /links/public/{token}/revoke`, `POST /links/{link_id}/revoke`
 - `GET /audit/tail` (только superadmin)
 
 ## Переменные окружения
@@ -108,4 +108,4 @@ pytest -q
 
 - Полная матрица полномочий реализована в базовом виде; детализацию по отделам можно расширить.
 - Криптографические преобразования предполагаются внешним компонентом (в MVP не включены).
-- Предпросмотр файлов не реализован как отдельный viewer-сервис, но ограничение по типам для публичных ссылок учтено.
+- Предпросмотр файлов реализован через inline-ответ API; отдельный viewer-сервис в MVP не используется.

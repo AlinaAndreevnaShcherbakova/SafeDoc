@@ -13,11 +13,14 @@ export default function AppNavbar({ isSuperadmin, onLogout }) {
         <Navbar.Toggle aria-controls="main-nav" />
         <Navbar.Collapse id="main-nav">
           <Nav className="me-auto">
+            <Nav.Link as={NavLink} to="/profile">
+              Личный кабинет
+            </Nav.Link>
             <Nav.Link as={NavLink} to="/documents">
-              Документы
+              Хранилище файлов
             </Nav.Link>
             <Nav.Link as={NavLink} to="/requests">
-              Заявки
+              Управление доступом
             </Nav.Link>
             {isSuperadmin && (
               <Nav.Link as={NavLink} to="/users">

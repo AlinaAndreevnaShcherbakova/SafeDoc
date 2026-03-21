@@ -5,14 +5,32 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token, hash_password, verify_password
 from app.db.postgres import get_session
 from app.models import User
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import ChangePasswordRequest, LoginRequest, TokenResponse, UpdateProfileRequest
 from app.schemas.users import UserRead
 from app.services.audit import audit_service
 
 router = APIRouter()
+
+
+def _serialize_user(user: User) -> UserRead:
+    role = "superadmin" if user.is_superadmin else "user"
+    return UserRead.model_validate(
+        {
+            "id": user.id,
+            "login": user.login,
+            "surname": user.surname,
+            "name": user.name,
+            "middle_name": user.middle_name,
+            "department": user.department,
+            "position": user.position,
+            "email": user.email,
+            "is_superadmin": user.is_superadmin,
+            "role": role,
+        }
+    )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -46,5 +64,37 @@ async def login(payload: LoginRequest, session: AsyncSession = Depends(get_sessi
 
 @router.get("/me", response_model=UserRead)
 async def me(current_user: User = Depends(get_current_user)) -> UserRead:
-    return UserRead.model_validate(current_user)
+    return _serialize_user(current_user)
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_me(
+    payload: UpdateProfileRequest,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    data = payload.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        if value is not None:
+            setattr(current_user, field, value)
+
+    await session.commit()
+    await session.refresh(current_user)
+    await audit_service.log_event("auth", str(current_user.id), "profile_update", "success")
+    return _serialize_user(current_user)
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePasswordRequest,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Текущий пароль указан неверно")
+
+    current_user.password_hash = hash_password(payload.new_password)
+    await session.commit()
+    await audit_service.log_event("auth", str(current_user.id), "password_change", "success")
+    return {"status": "ok"}
 
